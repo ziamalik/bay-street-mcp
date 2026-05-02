@@ -1,0 +1,55 @@
+[project]
+name = "bay-street-mcp"
+version = "0.1.0"
+description = "MCP server exposing Canadian financial-services compliance regulations (OSFI, PIPEDA, FINTRAC, Quebec Law 25) with cited passages."
+readme = "README.md"
+requires-python = ">=3.13"
+authors = [
+    { name = "Zia Malik" },
+]
+license = { text = "MIT" }
+keywords = ["mcp", "claude", "anthropic", "compliance", "osfi", "pipeda", "fintech", "canada"]
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Office/Business :: Financial",
+]
+dependencies = [
+    "mcp>=1.2.0",
+    "chromadb>=0.5.0",
+    "pypdf>=5.0.0",
+]
+
+[project.scripts]
+bay-street-mcp = "bay_street_mcp.server:main"
+bay-street-ingest = "bay_street_mcp.ingest:main"
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+]
+
+[project.urls]
+Homepage = "https://github.com/ziamalik/bay-street-mcp"
+Repository = "https://github.com/ziamalik/bay-street-mcp"
+Issues = "https://github.com/ziamalik/bay-street-mcp/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/bay_street_mcp"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

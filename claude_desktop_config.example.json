@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "bay-street": {
+      "command": "bay-street-mcp",
+      "env": {
+        "BAY_STREET_DB": "/absolute/path/to/your/.chroma"
+      }
+    }
+  }
+}

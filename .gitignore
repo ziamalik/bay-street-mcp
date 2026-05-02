@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Virtual envs
+.venv/
+.env
+
+# Tooling caches
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+
+# Vector store (rebuilt by ingestion)
+.chroma/
+
+# Local data (regulation PDFs, not redistributable)
+data/*
+!data/.gitkeep
+
+# OS / editor
+.DS_Store
+*.swp
+.idea/
+.vscode/
+
+# Secrets
+*.env.local
+.envrc
