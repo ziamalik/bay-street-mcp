@@ -1,8 +1,8 @@
 # Bay Street MCP
 
-**A Model Context Protocol server that lets Claude (and any MCP client) cite actual Canadian financial-services regulations: OSFI, PIPEDA, FINTRAC, Quebec Law 25.**
+**A regulatory backstop for Canadian fintech architects: validate designs, vendor selections, and incident responses against OSFI, PIPEDA, FINTRAC, and Quebec Law 25 without leaving your editor.**
 
-> Stop your AI from hallucinating compliance answers for Canadian fintech.
+> Architecture review at design time. Regulatory text at query time. Built for senior architects working with LLMs at Canadian financial institutions.
 
 [![CI](https://github.com/ziamalik/bay-street-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/ziamalik/bay-street-mcp/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -18,7 +18,7 @@
 | Project scaffolding, CI, license, dependencies, MCP server stub | ✅ Shipped |
 | OSFI Guideline E-21 ingestion working | 🚧 Up next |
 | `compliance_lookup` MCP tool returning real cited passages | ⬜ Planned |
-| End-to-end Claude Desktop smoke test | ⬜ Planned |
+| End-to-end smoke test against an MCP client (Claude Desktop, Cursor, Cline) | ⬜ Planned |
 | PIPEDA full text | ⬜ Planned |
 | FINTRAC AML/ATF guidance | ⬜ Planned |
 | Quebec Law 25 | ⬜ Planned |
@@ -28,17 +28,33 @@ If you want this for your Canadian fintech AI tooling, watch or star the repo. S
 
 ## Demo
 
-*Demo lands with the v0.1.0 release: a 90-second screen recording showing Claude Desktop calling `compliance_lookup` and answering a regulatory question with a citation back to the source document.*
+*Demo lands with the v0.1.0 release: a 90-second screen recording showing an MCP client (Claude Desktop in the demo) calling `compliance_lookup` and answering a regulatory question with a citation back to the source document.*
 
 ## Why I built this
 
-I have spent 20 years in Canadian financial services (TD, Canada Life, Gore Mutual). Every Canadian fintech I have spoken to that is shipping AI features hits the same wall: their LLM confidently makes up answers about OSFI E-21 risk management or PIPEDA disclosure obligations because the training data has 100x more US/EU regulation than Canadian.
+I have spent 20 years architecting platforms in Canadian financial services. The regulatory review of new designs has always been a slow, expensive, late-stage step. By the time legal or compliance surfaces an issue, the architecture is locked, the build is in progress, and the rework is painful.
 
-This MCP server fixes that. Point Claude at it, ask any question about Canadian financial regulation, and get an answer grounded in the actual document with citations.
+Bay Street MCP puts the regulatory backstop where it belongs: at design time, in the architect's editor, alongside your LLM of choice. The server exposes Canadian financial regulation as queryable context. Your LLM reads your architecture, queries the relevant provisions, and surfaces the implications before they become rework.
+
+## How architects use this
+
+Bay Street MCP shines at the four moments where architects need regulatory context without leaving their editor:
+
+1. **Pre-design check.** *"I'm building a real-time fraud detection system that uses customer transaction data. What regulatory considerations should shape the design?"* Your LLM queries Bay Street MCP and returns OSFI E-21 (operational risk) plus PIPEDA (data handling) considerations grounded in the source text.
+
+2. **Architecture review augmentation.** Paste your design (Mermaid diagram, ADR, RFC, system diagram). Your LLM reads it, queries the relevant provisions, and surfaces a structured regulatory review: *"Your design includes [X]. OSFI [section Y] requires [Z]. Recommendation: [W]."*
+
+3. **Vendor and third-party evaluation.** *"We're considering [SaaS vendor]. They process PII for our customers. What PIPEDA and Quebec Law 25 considerations apply to this contract?"* Get cited passages on consent, retention, cross-border transfer, and breach notification.
+
+4. **Incident response.** *"We had a 6-hour outage of our funds-transfer service. What are our regulatory reporting obligations?"* Get the specific E-21 incident reporting requirements with citations.
+
+The MCP server is the knowledge backstop. Your LLM is the reasoning engine. You stay the human-in-the-loop deciding what to ship.
 
 ## Quick start (planned for v0.1, not yet functional)
 
 The instructions below describe how the server will work once v0.1.0 ships. They do not work against the current commit. Tracking progress is in the Status table above.
+
+The example uses Claude Desktop because it is the most widely deployed MCP client. Bay Street MCP works with any MCP client (Cursor, Cline, Claude Code, Continue, Goose, etc.); the install step varies by client but the underlying server invocation is the same.
 
 1. Clone and install:
 
@@ -74,11 +90,11 @@ The instructions below describe how the server will work once v0.1.0 ships. They
 
    See `claude_desktop_config.example.json` for an alternative invocation if you have installed the package globally.
 
-5. Restart Claude Desktop. Ask:
+5. Restart Claude Desktop (or your MCP client of choice). Ask:
 
    > *What does OSFI E-21 say about AI risk management?*
 
-   Claude will call `compliance_lookup` and answer with citations.
+   The LLM will call `compliance_lookup` and answer with citations.
 
 ## What v0.1 will deliver (when shipped)
 
@@ -96,7 +112,7 @@ Subsequent versions add PIPEDA, FINTRAC, Quebec Law 25, then expand to OSFI E-23
 - [x] Project scaffolding, CI, license, dependencies, MCP server stub
 - [ ] OSFI Guideline E-21 ingestion working end-to-end
 - [ ] `compliance_lookup` MCP tool returning real cited passages
-- [ ] End-to-end Claude Desktop demo (Loom)
+- [ ] End-to-end demo against an MCP client (Loom)
 - [ ] First public release (v0.1.0 tag)
 
 **v0.2 and beyond:**
@@ -113,15 +129,17 @@ Subsequent versions add PIPEDA, FINTRAC, Quebec Law 25, then expand to OSFI E-23
 ## How it works
 
 ```
-User question  →  Claude  →  MCP tool call  →  Chroma similarity search
-       →  top-k passages with metadata  →  Claude synthesizes answer with citations
+User question  →  LLM  →  MCP tool call  →  Chroma similarity search
+       →  top-k passages with metadata  →  LLM synthesizes answer with citations
 ```
 
-The ingestion script chunks each regulation by ~800 words with 100-word overlap, stores in Chroma with metadata `{regulation, jurisdiction, page, source_url}`. The MCP tool returns passages with full citation metadata, so Claude can cite page numbers and source URLs in its response.
+The ingestion script chunks each regulation by ~800 words with 100-word overlap, stores in Chroma with metadata `{regulation, jurisdiction, page, source_url}`. The MCP tool returns passages with full citation metadata, so the LLM can cite page numbers and source URLs in its response.
 
 ## Why MCP
 
-MCP (Model Context Protocol) is becoming the standard interface for connecting LLMs to external context. Exposing this as an MCP server means the same compliance knowledge is usable from Claude Desktop, Claude Code, Cursor, and any future MCP client without building a custom integration each time.
+MCP (Model Context Protocol) is becoming the standard interface for connecting LLMs to external context. Exposing this as an MCP server means the same compliance knowledge is usable from any MCP-compatible client (Claude Desktop, Cursor, Cline, Claude Code, Continue, Goose, and others) and any underlying model the client supports, without building a custom integration each time.
+
+Because MCP separates the knowledge layer from the model layer, the same Bay Street MCP install works with any model the client supports: Claude, Mistral, OpenAI (including their open-weight `gpt-oss` models), Llama, or any local model via Ollama or vLLM. Useful for on-prem deployments, data-residency-sensitive workflows where cloud LLMs are not allowed, and cost-sensitive batch use cases. The knowledge layer (Canadian regulatory text) and the reasoning layer (whichever LLM you choose) are deliberately decoupled.
 
 ## Development
 
